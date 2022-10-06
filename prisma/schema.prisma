@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model excursion {
+  id              String            @id @default(uuid())
+  name            String?
+  startDate       String 
+  endDate         String
+  type            String
+  cost            Decimal           @db.Money() 
+  activity        activityOnExcursion[]
+  // activity       activity[]
+}
+
+// la realacion entre excursion y excursionTypes es de uno a muchos
+// cada excursion puede tener muchas fotos
+
+model activityType {
+  id              Int       @id @default(autoincrement())
+  name            String    @unique
+  activity        activity[]
+}
+
+// La relacion entre activity y excursion es de muchos a muchos
+// cada excursion puede tener muchas actividades y cada actividad puede pertenecer a muchas excursiones
+
+model activity {
+  id              String            @id @default(uuid())
+  name            String
+  latitude        String 
+  longitude       String
+  descripton      String
+  stock           Int?
+  minimunDuration String
+  rating          Decimal
+  cost            Decimal           @db.Money()
+  country         String
+  city            String
+  pictures        activityPictures[]
+  type            activityType      @relation(fields: [typeId], references: [id])
+  typeId          Int              
+  excursion       activityOnExcursion[]
+  // excursion       excursion[]
+}
+
+// la realacion entre activity y activityPictures es de uno a muchos
+// cada actividaad puede tener muchas fotos
+
+model activityPictures {
+  id              String            @id @default(uuid()) 
+  url             String            @db.Text       
+  activity        activity          @relation (fields: [activityId], references: [id])
+  activityId      String  
+}
+
+model activityOnExcursion {
+  id              String            @default(uuid())
+  activity        activity          @relation (fields: [activityId], references: [id])
+  activityId      String            //@default(uuid())
+  excursion       excursion         @relation (fields: [excursionId], references: [id])
+  excursionId     String            //@default(uuid())
+  @@id([activityId, excursionId])
+}
